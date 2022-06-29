@@ -16,7 +16,7 @@ sdk.hook(
         if calcType ~= 0 and calcType ~= 1 then
             return retval
         end
-        if calcParam:call("get_PhysicalMeatAdjustRate()") >= 0.45 then
+        if calcParam:call("get_PhysicalMeatAdjustRate()") > 0.445 then
             return sdk.to_ptr(0x1)
         else
             return sdk.to_ptr(0x0)
