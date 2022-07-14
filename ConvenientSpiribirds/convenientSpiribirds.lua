@@ -1,34 +1,30 @@
-
-
 --- Configurations
 
-local SPIRIBIRD_MULTIPLIER = 3
+local SPIRIBIRD_MULTIPLIER = 2
 
 
 --- Plugin
 
-local modded_ids = {}
+local convenientSpiribird_modded_ids = {}
+
 sdk.hook(
     sdk.find_type_definition("snow.data.EquipmentInventoryData"):get_method("getLvBuffCageData"),
     function(args) end,
     function(retval)
-        local buffCageData = sdk.to_managed_object(retval)
-        local param = buffCageData:get_field("_Param")
-        local id = param:get_field("_Id")
-        if  modded_ids[id] then
+        local param = sdk.to_managed_object(retval)._Param
+        local id = param._Id
+        if convenientSpiribird_modded_ids[id] then
             return retval
         end
+        convenientSpiribird_modded_ids[id] = true
 
-        
-        local arr = param:get_field("_StatusBuffAddValue")
-        
+
+        local arr = param._StatusBuffAddValue
         for i, obj in ipairs(arr:get_elements()) do
-            local value = obj:get_field("mValue")
-            
+            local value = obj.mValue
             arr[i - 1] = sdk.create_uint32(value * SPIRIBIRD_MULTIPLIER)
         end
-        
-        modded_ids[id] = true
+
         return retval
     end
 )
@@ -41,12 +37,10 @@ sdk.hook(
         local player = sdk.to_managed_object(args[2])
         local count = sdk.to_int64(args[3])
 
-        local staminaMax = player:get_field("_refPlayerData"):get_field("_staminaMax")
         next_stamina_max = count * 30.0
         next_player = player
     end,
     function(retval)
-        next_player:call("calcStaminaMax", next_stamina_max, false)
+        next_player:calcStaminaMax(next_stamina_max, false)
     end
 )
-
