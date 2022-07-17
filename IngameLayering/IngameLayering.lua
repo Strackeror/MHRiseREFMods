@@ -27,6 +27,7 @@ end
 
 local function setModelId(weapon_data, new_id)
     weapon_data._HyakuryuModelId = new_id
+    sdk.get_managed_singleton("snow.gui.fsm.smithy.GuiSmithyFsmManager"):set_IsPlayerEquipChangeReloadFlag(true)
 end
 
 local function error_message_coroutine(message)
@@ -47,7 +48,7 @@ end
 
 local function layering_coroutine(making_data)
     return coroutine.create(function()
-        if not making_data:canMakeAsProcessNext() then
+        if not making_data:canMakeAsProcessNext() and not making_data:canMakeAsProductNext() then
             return
         end
 
@@ -92,7 +93,7 @@ local function layering_coroutine(making_data)
             coroutine.yield()
         end
         if result == 0 then
-            item_box:tryAddGameItem(inventory_data, OUTFIT_VOUCHER_ITEM_ID, -1)
+            item_box:call("tryAddGameItem(snow.data.ItemInventoryData, snow.data.ContentsIdSystem.ItemId, System.Int32)", inventory_data, OUTFIT_VOUCHER_ITEM_ID, -1)
             setModelId(weapon_data, new_model_id)
         end
         guiMgr:closeYNInfo()
@@ -107,6 +108,18 @@ local function is_key_down(key_id)
     return kb:call("isTrigger", key_id)
 end
 
+local function input_trigger_check(id)
+    local t = sdk.find_type_definition("snow.gui.StmGuiInput"):get_method("andTrg")(
+        nil,
+        id, 0, 0, 0, 0,
+        0,  0, 0, 0, 0,
+        false, false)
+    log.info("input result".. tostring(t))
+    return t
+end
+
+local STATIC_MENU_ACT_TYPE_CL = 0x15
+
 sdk.hook(sdk.find_type_definition("snow.gui.fsm.smithy.GuiSmithyFsmWeaponMenuSelectAction"):get_method("update"),
     function(args)
         if gui_coroutine ~= nil then
@@ -114,7 +127,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.fsm.smithy.GuiSmithyFsmWeaponMenuSel
             return sdk.PreHookResult.SKIP_ORIGINAL
         end
 
-        if not (is_key_down(KEY_L)) then
+        if not input_trigger_check(STATIC_MENU_ACT_TYPE_CL) then
             return
         end
 
